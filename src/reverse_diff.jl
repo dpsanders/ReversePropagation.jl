@@ -78,8 +78,8 @@ end
 
 function adj(num_times_used, eq::Equation)
 
-    @show num_times_used
-    @show eq
+    # @show num_times_used
+    # @show eq
 
     vars = args(eq)
     # adjoints = Adjoint(op(eq), vars)
@@ -96,7 +96,7 @@ function adj(num_times_used, eq::Equation)
     # @show bar_lhs
     for (var, adj) in zip(vars, adjoints)
 
-        @show typeof(var)
+        # @show typeof(var)
         !isa(var, Num) && continue
 
         barred = bar(var)
@@ -124,8 +124,6 @@ function reverse_pass(vars, code, final)
 
     num, final_bar = numbered_variable!(num_times_used, bar(final))
     reverse_code = [Equation(final_bar, 1)]
-
-    # @show wengert, final
 
     for eq in reverse(code)
         # @show eq
@@ -156,9 +154,11 @@ end
 function gradient_expr(vars, ex)
     forward_code, final, reverse_code, gradient_vars = gradient_code(vars, ex)
 
-    code = Expr(:block, Expr.(forward_code)..., Expr.(reverse_code)...)
+    code = Expr(:block, 
+                MTK.toexpr.(forward_code)..., 
+                MTK.toexpr.(reverse_code)...)
 
-    return_tuple = make_tuple(Expr.(gradient_vars))
+    return_tuple = make_tuple(MTK.toexpr.(gradient_vars))
     # push!(code.args, :(return $return_tuple))
 
     return code, final, return_tuple
