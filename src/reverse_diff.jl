@@ -1,15 +1,9 @@
 
-
-
-
-
 lhs(eq::Equation) = eq.lhs
 rhs(eq::Equation) = value(eq.rhs)
 
 op(eq::Equation) = rhs(eq).f
 args(eq::Equation) = Num.(rhs(eq).arguments)
-
-
 
 name(var) = value(var).name
 bar(var) = Variable(Symbol(var, "̄"))
@@ -170,10 +164,12 @@ function gradient(vars, ex::Num)
     code, final, return_tuple = gradient_expr(vars, ex)
     input_vars = make_tuple(Symbol.(vars))
 
+    final2 = MTK.toexpr(final)
+
     quote
         ($input_vars, ) -> begin
             $code
-            return $final, $return_tuple
+            return $(final2), $return_tuple
         end
     end
 
