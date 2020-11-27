@@ -11,6 +11,7 @@ SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
 
 [compat]
 ModelingToolkit = "4.0"
+SymbolicUtils = "0.6"
 julia = "1"
 
 [extras]
