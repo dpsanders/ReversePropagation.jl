@@ -55,20 +55,24 @@ function numbered_variable!(num_times_used, var, increment=false)
 end
 
 
-# function adj(eq::Equation)
-#     vars = args(eq)
-#     adjoints = Adjoint(op(eq), vars)
+function adj(eq::Equation)
+    vars = value.(args(eq))
 
-#     bar_lhs = bar(lhs(eq))
+    bar_lhs = bar(lhs(eq))
 
-#     eqns = map(zip(vars, adjoints)) do (var, adj)
-#         barred = bar(var)
+    adjoints = adj(op(eq), bar_lhs, vars...)
 
-#         Equation(barred, barred + bar_lhs * adj)
-#     end
+    eqns = map(zip(vars, adjoints)) do (var, adj)
+        @show var, adj, typeof(var)
+        if var isa Sym{Tangent{Real}}
+            barred = bar(var)
 
-#     return eqns
-# end
+            Equation(barred, barred + adj)
+        end
+    end
+
+    return eqns
+end
 
 function adj(num_times_used, eq::Equation)
 
@@ -143,6 +147,10 @@ function gradient_code(vars, ex)
 end
 
 
+
+
+make_tuple(args) = Expr(:tuple, args...)
+make_tuple(s::Symbol) = make_tuple([s])
 
 
 function gradient_expr(vars, ex)

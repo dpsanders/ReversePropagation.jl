@@ -21,4 +21,7 @@ include("cse.jl")
 include("reverse_diff.jl")
 
 
+# better printing for Equation:
+Base.show(io::IO, eq::Equation) = print(io, lhs(eq), " := ", rhs(eq))
+
 end
