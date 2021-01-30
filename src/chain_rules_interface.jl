@@ -4,7 +4,7 @@ Base.conj(x::Num) = x   # assuming reals
 Base.complex(x::Num) = x
 Base.float(x::Num) = x
 
-@scalar_rule(^(x::Num, n::Integer), (n*x^(n-1), Zero()))
+@scalar_rule(^(x::Num, n::Integer), (n==1 ? 1 : n==2 ? 2x : n*x^(n-1), Zero()))
 
 adj(f, z̄::Num, x::Num) = (rrule(f, x)[2](z̄))[2]
 adj(f, z̄, x) = adj(f, Num(z̄), Num(x))
