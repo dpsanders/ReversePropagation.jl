@@ -1,18 +1,18 @@
 
-lhs(eq::Equation) = eq.lhs
-rhs(eq::Equation) = value(eq.rhs)
+lhs(eq::Assignment) = eq.lhs
+rhs(eq::Assignment) = value(eq.rhs)
 
-op(eq::Equation) = rhs(eq).f
-args(eq::Equation) = Num.(rhs(eq).arguments)
+op(eq::Assignment) = operation(rhs(eq))
+args(eq::Assignment) = Num.(arguments(rhs(eq)))
 
 name(var) = value(var).name
-bar(var) = Variable(Symbol(var, "̄"))
+bar(var) = Variable(Symbol(var, "̄"))  # string contains overbar symbol (on top of first `"`)
 
 
 # bar(op) = Variable()
 
-# "Construct adjoint of a given equation with accumulation"
-# function adj(eq::Equation)
+# "Construct adjoint of a given Assignment with accumulation"
+# function adj(eq::Assignment)
 #     vars = args(eq)
 #     adjoints = Adjoint(op(eq), vars)
 
@@ -21,7 +21,7 @@ bar(var) = Variable(Symbol(var, "̄"))
 #     eqns = map(zip(vars, adjoints)) do (var, adj)
 #         barred = bar(var)
 
-#         Equation(barred, barred + bar_lhs * adj)
+#         Assignment(barred, barred + bar_lhs * adj)
 #     end
 
 #     return eqns
@@ -55,7 +55,7 @@ function numbered_variable!(num_times_used, var, increment=false)
 end
 
 
-function adj(eq::Equation)
+function adj(eq::Assignment)
     vars = value.(args(eq))
 
     bar_lhs = bar(lhs(eq))
@@ -64,17 +64,17 @@ function adj(eq::Equation)
 
     eqns = map(zip(vars, adjoints)) do (var, adj)
         @show var, adj, typeof(var)
-        if var isa Sym{Tangent{Real}}
+        if var isa Sym{Tangent{Real}}  # for linearization pass
             barred = bar(var)
 
-            Equation(barred, barred + adj)
+            Assignment(barred, barred + adj)
         end
     end
 
     return eqns
 end
 
-function adj(num_times_used, eq::Equation)
+function adj(num_times_used, eq::Assignment)
 
     # @show num_times_used
     # @show eq
@@ -89,7 +89,7 @@ function adj(num_times_used, eq::Equation)
 
     adjoints = adj(op(eq), numbered_bar_lhs, vars...)
 
-    eqns = Equation[]
+    eqns = Assignment[]
 
     # @show bar_lhs
     for (var, adj) in zip(vars, adjoints)
@@ -102,13 +102,13 @@ function adj(num_times_used, eq::Equation)
         is_new, numbered = numbered_variable!(num_times_used, barred)
 
         if is_new # first use
-            # Equation(numbered, numbered_bar_lhs * adj)
-            push!(eqns, Equation(numbered, adj))
+            # Assignment(numbered, numbered_bar_lhs * adj)
+            push!(eqns, Assignment(numbered, adj))
 
         else  # re-use so generate new variable
             new_num, barred_new = numbered_variable!(num_times_used, barred, true)
-            # Equation(barred_new, numbered + numbered_bar_lhs * adj)
-            push!(eqns, Equation(barred_new, numbered + adj))
+            # Assignment(barred_new, numbered + numbered_bar_lhs * adj)
+            push!(eqns, Assignment(barred_new, numbered + adj))
 
         end
     end
@@ -121,7 +121,7 @@ function reverse_pass(vars, code, final)
     num_times_used = Dict{Num, Int}()
 
     num, final_bar = numbered_variable!(num_times_used, bar(final))
-    reverse_code = [Equation(final_bar, 1)]
+    reverse_code = [Assignment(final_bar, 1)]
 
     for eq in reverse(code)
         # @show eq
@@ -135,7 +135,7 @@ end
 
 
 """
-Return code for forward and reverse pass as MTK `Equation`s.
+Return code for forward and reverse pass as MTK `Assignment`s.
 `final` is the output variable from the forward pass.
 `gradient_vars` are the output variables from the reverse pass.
 """

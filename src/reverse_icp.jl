@@ -30,12 +30,12 @@ end
 Expr.((Reverse{+})()(z, x, y))
 
 
-function rev(eq::Equation)
+function rev(eq::Assignment)
     vars = args(eq)
     reverse = Reverse(op(eq), [lhs(eq); vars]...)
 
     eqns = map(zip(vars, reverse)) do (var, rev)
-        Equation(var, var ∩ rev)
+        Assignment(var, var ∩ rev)
     end
 
     return eqns

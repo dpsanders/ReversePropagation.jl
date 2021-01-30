@@ -26,13 +26,13 @@ tangent(var::Num) = tangent(value(var))
 tangent(var::Sym) = Sym{Tangent{Real}}(Symbol(var, "̇"))
 tangent(x::Real) = 0  # derivative of a constant
 
-function tangent(eq::Equation)
+function tangent(eq::Assignment)
     
     vars = args(eq)
     rhs_tangents = Num.(tangent.(args(eq)))
     lhs_tangent = Num(tangent(lhs(eq)))
 
-    return Equation(lhs_tangent,
+    return Assignment(lhs_tangent,
                     frule( (Zero(), rhs_tangents...), 
                     op(eq), vars...)[2]
     )

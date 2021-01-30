@@ -8,7 +8,7 @@ using SymbolicUtils
 using SymbolicUtils.Rewriters
 
 using ModelingToolkit
-using ModelingToolkit: value
+using ModelingToolkit: value, istree, operation, arguments
 const MTK = ModelingToolkit
 
 using DataStructures
@@ -16,12 +16,17 @@ using DataStructures
 using ChainRules
 
 
+
+struct Assignment 
+    lhs 
+    rhs 
+end
+
+Base.show(io::IO, eq::Assignment) = print(io, lhs(eq), " := ", rhs(eq))
+
+
 include("chain_rules_interface.jl")
 include("cse.jl")
 include("reverse_diff.jl")
-
-
-# better printing for Equation:
-Base.show(io::IO, eq::Equation) = print(io, lhs(eq), " := ", rhs(eq))
 
 end
