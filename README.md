@@ -27,7 +27,7 @@ The package works by tracing an input function into a `ModelingToolkit` object. 
 The unexported `gradient_code` function can be used to inspect this process:
 
 ```jl
-julia> ex = x + (x * y);
+julia> ex = f(vars);  #  x + (x * y)
 
 julia> forward_code, final, reverse_code, gradient_vars = ReversePropagation.gradient_code(vars, ex);
 
