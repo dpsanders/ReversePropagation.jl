@@ -152,6 +152,7 @@ end
 make_tuple(args) = Expr(:tuple, args...)
 make_tuple(s::Symbol) = make_tuple([s])
 
+MTK.toexpr(ex::Assignment) = MTK.toexpr(Equation(ex.lhs, ex.rhs))
 
 function gradient_expr(vars, ex)
     forward_code, final, reverse_code, gradient_vars = gradient_code(vars, ex)

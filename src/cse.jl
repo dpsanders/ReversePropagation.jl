@@ -3,6 +3,10 @@
 # Original version together with Shashi Gowda:
 # https://github.com/JuliaSymbolics/SymbolicUtils.jl/issues/121
 
+## Works by keeping track of a dict of expressions that have already been seen
+## Each new expression is assigned a fresh symbolic name 
+
+
 const symbol_numbers = Dict{Symbol, Int}()
 
 """Return a new, unique symbol like _z3.
