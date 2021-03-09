@@ -135,7 +135,7 @@ end
 
 
 """
-Return code for forward and reverse pass as MTK `Assignment`s.
+Return code for forward and reverse pass 
 `final` is the output variable from the forward pass.
 `gradient_vars` are the output variables from the reverse pass.
 """
@@ -152,16 +152,16 @@ end
 make_tuple(args) = Expr(:tuple, args...)
 make_tuple(s::Symbol) = make_tuple([s])
 
-MTK.toexpr(ex::Assignment) = MTK.toexpr(Equation(ex.lhs, ex.rhs))
+toexpr(ex::Assignment) = toexpr(Equation(ex.lhs, ex.rhs))
 
 function gradient_expr(vars, ex)
     forward_code, final, reverse_code, gradient_vars = gradient_code(vars, ex)
 
     code = Expr(:block, 
-                MTK.toexpr.(forward_code)..., 
-                MTK.toexpr.(reverse_code)...)
+                toexpr.(forward_code)..., 
+                toexpr.(reverse_code)...)
 
-    return_tuple = make_tuple(MTK.toexpr.(gradient_vars))
+    return_tuple = make_tuple(toexpr.(gradient_vars))
     # push!(code.args, :(return $return_tuple))
 
     return code, final, return_tuple
@@ -173,7 +173,7 @@ function gradient(vars, ex::Num)
     code, final, return_tuple = gradient_expr(vars, ex)
     input_vars = make_tuple(Symbol.(vars))
 
-    final2 = MTK.toexpr(final)
+    final2 = toexpr(final)
 
     quote
         ($input_vars, ) -> begin

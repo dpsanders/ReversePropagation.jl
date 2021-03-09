@@ -95,10 +95,11 @@ function cse(vars, expr, dict::OrderedDict=initialize_dict(vars))
 
     orig_length = length(dict)
 
+    
     r = @rule ~x::(x -> (istree(x) || x isa Sym)) => 
         haskey(dict, ~x) ? dict[~x] : dict[~x] = make_symbol()
 
-    final = Postwalk(Chain([r]))(expr)  # modifies dict
+    final = Postwalk(Chain([r]))(expr)  # *modifies* dict
     # @show final
     # @show dict
 

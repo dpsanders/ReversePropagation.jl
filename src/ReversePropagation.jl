@@ -2,14 +2,16 @@ module ReversePropagation
 
 export gradient
 
+import Symbolics: toexpr
+
+
 
 using SymbolicUtils
-# using SymbolicUtils: Sym, Term
+using SymbolicUtils: Sym, Term
 using SymbolicUtils.Rewriters
 
-using ModelingToolkit
-using ModelingToolkit: value, istree, operation, arguments
-const MTK = ModelingToolkit
+using Symbolics
+using Symbolics: value, istree, operation, arguments
 
 using DataStructures
 
