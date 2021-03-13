@@ -135,7 +135,7 @@ end
 
 
 """
-Return code for forward and reverse pass 
+Return code for forward and reverse pass, as a vector of Assignments.
 `final` is the output variable from the forward pass.
 `gradient_vars` are the output variables from the reverse pass.
 """
@@ -152,7 +152,7 @@ end
 make_tuple(args) = Expr(:tuple, args...)
 make_tuple(s::Symbol) = make_tuple([s])
 
-toexpr(ex::Assignment) = toexpr(Equation(ex.lhs, ex.rhs))
+# toexpr(ex::Assignment) = toexpr(Equation(ex.lhs, ex.rhs))
 
 function gradient_expr(vars, ex)
     forward_code, final, reverse_code, gradient_vars = gradient_code(vars, ex)

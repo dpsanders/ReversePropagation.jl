@@ -11,7 +11,9 @@ using SymbolicUtils: Sym, Term
 using SymbolicUtils.Rewriters
 
 using Symbolics
-using Symbolics: value, istree, operation, arguments
+using Symbolics: value, 
+                istree, operation, arguments, 
+                Assignment
 
 using DataStructures
 
@@ -19,12 +21,12 @@ using ChainRules
 
 
 
-struct Assignment 
-    lhs 
-    rhs 
-end
+# struct Assignment 
+#     lhs 
+#     rhs 
+# end
 
-Base.show(io::IO, eq::Assignment) = print(io, lhs(eq), " := ", rhs(eq))
+# Base.show(io::IO, eq::Assignment) = print(io, lhs(eq), " := ", rhs(eq))
 
 
 include("chain_rules_interface.jl")

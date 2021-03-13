@@ -89,17 +89,18 @@ This version starts with the given variables"
 #     final = Postwalk(Chain([r]))(expr)
 #     [var => ex for (ex, var) in pairs(dict)], final
 # end
-
+3
 "CSE with pre-existing dict"
 function cse(vars, expr, dict::OrderedDict=initialize_dict(vars))
 
     orig_length = length(dict)
 
-    
-    r = @rule ~x::(x -> (istree(x) || x isa Sym)) => 
-        haskey(dict, ~x) ? dict[~x] : dict[~x] = make_symbol()
+    rules = [
+        @rule ~x::(x -> (istree(x) || x isa Sym)) => 
+            haskey(dict, ~x) ? dict[~x] : dict[~x] = make_symbol()
+    ]
 
-    final = Postwalk(Chain([r]))(expr)  # *modifies* dict
+    final = Postwalk(Chain(rules))(expr)  # *modifies* dict
     # @show final
     # @show dict
 
