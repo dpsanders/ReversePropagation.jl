@@ -25,12 +25,14 @@ end
 
 make_symbol(c::Char) = make_symbol(Symbol(c))
 
+make_variable(s::Symbol) = Variable(make_symbol(s))
+
 let current_symbol = 'a'
 
     """Make a new symbol like `_c`. 
     Cycles through the alphabet and adds numbers if necessary.
     """
-    global function make_symbol()
+    global function make_variable()
         current_sym = current_symbol
 
         if current_sym < 'z'

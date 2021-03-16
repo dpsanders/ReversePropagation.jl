@@ -4,7 +4,7 @@ using Symbolics
 using DataStructures
 
 using Symbolics: operation, arguments, istree, Assignment
-using ReversePropagation: make_symbol
+using ReversePropagation: make_variable
 
 
 """Do common subexpression elimination on the expression `ex`, 
@@ -34,7 +34,7 @@ function cse!(dict, ex)
 
         else
             left  = cse!(dict, args[1])
-            right = cse!(dict, op(args[2:end]...))
+            right = cse!(dict, op(args[2:end]...))   # use similarterm?
 
             ex = op(left, right)
 
@@ -44,7 +44,7 @@ function cse!(dict, ex)
             return dict[ex]
 
         else
-            val = make_symbol()
+            val = make_variable()
             push!(dict, ex => val)
         end
 
@@ -70,6 +70,7 @@ function cse_equations(ex)
 
     return [Assignment(rhs, lhs) for (lhs, rhs) in pairs(dict)], final
 end
+
 
 
 cse(ex::Num) = cse(Symbolics.value(ex))
