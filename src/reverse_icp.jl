@@ -27,20 +27,24 @@ include("cse_new.jl")
 # Possibly should replace all calls to `rev` with calls to the actual 
 # reverse functions instead for speed
 
-remove_constant(s) = (s isa Num || s isa Sym) ? s : Variable(:_)
 
-function rev(eq::Assignment)
+remove_constant(s) = (s isa Num || s isa Sym) ? s : Variable(:_)  
+remove_parameters(s, params) = (any(x -> isequal(x, s), params)) ? Variable(:_) : s
 
-    @show eq
+function rev(eq::Assignment, params)
+
+    @show eq, params
 
     vars = tuple(args(eq)...)
-    return_vars = Symbolics.MakeTuple( remove_constant.(tuple(lhs(eq), vars...)) )
+    return_vars = remove_constant.(tuple(lhs(eq), vars...))
     # return_vars = remove_constant.(tuple(lhs(eq), vars...)) 
     
+    return_vars = remove_parameters.(return_vars, Ref(params))
+
 
     reverse = rev(op(eq), lhs(eq), vars...)
 
-    return Assignment(return_vars, reverse)
+    return Assignment(Symbolics.MakeTuple(return_vars), reverse)
 
 end
 
@@ -49,7 +53,7 @@ end
 # reverse mode AD introduces *new* variables
 # reverse propagation can use the *same* variables
 
-@variables x, y, z
+@variables x, y, z, a
 # x ~ x ∩ (z - y)
 
 
@@ -85,33 +89,39 @@ end
 
 
 "Generate code (as Symbolics.Assignment) for forward--backward (HC4Revise) contractor"
-function forward_backward_code(vars, ex)
+function forward_backward_code(ex, vars, params=[])
 
     final_var = make_variable(:value)  # to record the output of running the forward interval function
     constraint_var = make_variable(:constraint)   # symbolic constraint variable
 
     forward_code, last = cse_equations(ex)
+    
+    @show forward_code
+
 
     @show constraint_var, final_var
 
     constraint_code = [Assignment(final_var, last),
                         Assignment(last, last ∩ constraint_var)]
 
-    reverse_code = rev.(reverse(forward_code))
+    reverse_code = rev.(reverse(forward_code), Ref(params))
+
 
     code = forward_code ∪ constraint_code ∪ reverse_code
 
     return code, final_var, constraint_var
 end
 
+code, final, constraint = forward_backward_code(x^2 + a*y^2, [x, y], [a])
+
+code
 
 Symbolics.toexpr(t::Tuple) = Symbolics.toexpr(Symbolics.MakeTuple(t))
 
 vars = @variables x, y
 
-ex = x^2 + y^2
-
-code, final, constraint = forward_backward_code(vars, ex)
+ex = x^2 + a*y^2
+code, final, constraint = forward_backward_code(ex, vars, [a])
 
 code
 final
@@ -131,41 +141,58 @@ dump(toexpr.(code))
 # end
 
 "Build Julia code for forward_backward contractor"
-function forward_backward_expr(vars, ex)
-    symbolic_code, final_var, constraint_var = forward_backward_code(vars, ex)
+function forward_backward_expr(ex, vars, params=[])
+    
+    symbolic_code, final_var, constraint_var = forward_backward_code(ex, vars, params)
 
     @show symbolic_code
 
     code = toexpr.(symbolic_code)
     all_code = Expr(:block, code...)
 
-    return all_code, toexpr(final_var), toexpr(constraint_var)
+    return all_code, final_var, constraint_var
 end
 
-forward_backward_expr(vars, ex)
+
+forward_backward_expr(ex, vars, [a])
 
 
-function forward_backward_contractor(vars, ex)
+function forward_backward_contractor(ex, vars, params=[])
 
-    code, final_var, constraint_var = forward_backward_expr(vars, ex)
-    input_vars = toexpr(vars)
+    code, final_var, constraint_var = forward_backward_expr(ex, vars, params)
+    
+    input_vars = toexpr(Symbolics.MakeTuple(vars))
     final = toexpr(final_var)
 
-    return eval(
+    constraint = toexpr(constraint_var)
+
+    if !isempty(params)
+        params_tuple = toexpr(Symbolics.MakeTuple(params))
+    else
+        params_tuple = :()
+    end
+
+    
+
+
+    function_code = 
         quote
-            ($input_vars, $constraint_var) -> begin
+            ($input_vars, $constraint, $params_tuple) -> begin
                 $code
                 return $(final), $input_vars
             end
         end
-    )
+    
+    return eval(function_code)
 
 
 end
 
-C = forward_backward_contractor(vars, ex)
+C = forward_backward_contractor(ex, vars, [a])
 
-const CC = forward_backward_contractor(vars, ex)
+const CC2 = forward_backward_contractor(ex, vars, [a])
+
+CC2((-10..10, -10..10), 0..1, 3)
 
 
 using BenchmarkTools
@@ -173,6 +200,10 @@ using BenchmarkTools
 @btime CC((-10..10, -10..10), 0..1)
 
 @code_native C((-10..10, -10..10), 0..1)
+
+CC(IntervalBox(-10..10, 2), 0..1)
+
+
 
 vars = @variables x, y
 ex = 3x^2 + 4x^2 * y
