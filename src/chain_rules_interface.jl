@@ -1,8 +1,8 @@
 # Interface for using ChainRules.jl
 
-Base.conj(x::Num) = x   # assuming reals
-Base.complex(x::Num) = x
-Base.float(x::Num) = x
+# Base.conj(x::Num) = x   # assuming reals
+# Base.complex(x::Num) = x
+# Base.float(x::Num) = x
 
 @scalar_rule(^(x::Num, n::Integer), (n==1 ? 1 : n==2 ? 2x : n*x^(n-1), Zero()))
 

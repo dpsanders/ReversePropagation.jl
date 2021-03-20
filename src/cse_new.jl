@@ -1,11 +1,5 @@
 ## Common Subexpression Elimination (CSE)
 
-using Symbolics
-using DataStructures
-
-using Symbolics: operation, arguments, istree, Assignment
-using ReversePropagation: make_variable
-
 
 """Do common subexpression elimination on the expression `ex`, 
 by traversing it recursively and reducing to binary operations.

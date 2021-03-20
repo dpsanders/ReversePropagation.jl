@@ -1,7 +1,7 @@
 # Reverse interval constraint propagation using Symbolics
 
 using Symbolics
-using Symbolics: toexpr, Sym
+using Symbolics: toexpr, Sym, value
 
 using ReversePropagation: op, args, lhs, rhs, Assignment, cse_total, make_variable, make_tuple
 using ReversePropagation
@@ -192,7 +192,9 @@ C = forward_backward_contractor(ex, vars, [a])
 
 const CC2 = forward_backward_contractor(ex, vars, [a])
 
-CC2((-10..10, -10..10), 0..1, 3)
+CC2((-10..10, -10..10), 0..1, 5)
+@btime CC2((-10..10, -10..10), 0..1, 6)
+@btime CC2((-10..10, -10..10), 0..1, 7)
 
 
 using BenchmarkTools

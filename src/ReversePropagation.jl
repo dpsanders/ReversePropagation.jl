@@ -17,6 +17,7 @@ using Symbolics: value,
 
 using DataStructures
 
+
 using ChainRules
 
 
@@ -28,9 +29,10 @@ using ChainRules
 
 # Base.show(io::IO, eq::Assignment) = print(io, lhs(eq), " := ", rhs(eq))
 
-
+include("make_variable.jl")
 include("chain_rules_interface.jl")
-include("cse.jl")
+# include("cse.jl")
+include("cse_new.jl")
 include("reverse_diff.jl")
 
 end

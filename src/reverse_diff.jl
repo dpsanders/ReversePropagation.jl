@@ -6,7 +6,7 @@ op(eq::Assignment) = operation(rhs(eq))
 args(eq::Assignment) = Num.(arguments(rhs(eq)))
 
 name(var) = value(var).name
-bar(var) = Variable(Symbol(var, "̄"))  # string contains overbar symbol (on top of first `"`)
+bar(var) = Variable(Symbol(var, '̄'))  # the character is the overbar symbol (on top of first `'`)
 
 
 # bar(op) = Variable()
@@ -64,15 +64,45 @@ function adj(eq::Assignment)
 
     eqns = map(zip(vars, adjoints)) do (var, adj)
         @show var, adj, typeof(var)
-        if var isa Sym{Tangent{Real}}  # for linearization pass
+        #if var isa Sym{Tangent{Real}}  # for linearization pass
             barred = bar(var)
 
             Assignment(barred, barred + adj)
-        end
+        #end
     end
 
     return eqns
 end
+
+# modifies the Set assigned of variables which have already been assigned
+function simple_adj(eq::Assignment, assigned)
+    
+    vars = ReversePropagation.args(eq)
+    bar_lhs = bar(lhs(eq))
+    
+    adjoints = adj(op(eq), bar_lhs, vars...)
+
+    eqns = Assignment[]
+
+    for (var, adjoint) in zip(vars, adjoints)
+
+        !isa(var, Num) && continue
+
+        barred = bar(var)
+
+        if any(x -> isequal(x, barred), assigned)
+            push!(eqns, Assignment(barred, barred + adjoint))
+
+        else
+            push!(eqns, Assignment(barred, adjoint))
+            push!(assigned, barred)
+        end
+
+    end
+
+    return eqns
+end
+
 
 function adj(num_times_used, eq::Assignment)
 
@@ -132,6 +162,18 @@ function reverse_pass(vars, code, final)
     return reverse_code, final_vars
 end
 
+function simple_reverse_pass(vars, forward_code)
+    
+    assigned = Set()  # which variables have already been assigned
+    
+    reverse_code = reduce(vcat, simple_adj.(reverse(forward_code), Ref(assigned)))
+
+    final_vars = bar.(vars)
+
+    return reverse_code, final_vars, assigned
+
+end
+
 
 
 """
@@ -140,10 +182,22 @@ Return code for forward and reverse pass, as a vector of Assignments.
 `gradient_vars` are the output variables from the reverse pass.
 """
 function gradient_code(vars, ex)
-    forward_code, final = cse_total(vars, ex)
-    reverse_code, gradient_vars = reverse_pass(vars, forward_code, final)
+    forward_code, final = cse_equations(ex)
+    # reverse_code, gradient_vars = reverse_pass(vars, forward_code, final)
 
-    return forward_code, final, reverse_code, gradient_vars
+
+
+    reverse_code, gradient_vars, assigned = simple_reverse_pass(vars, forward_code)
+
+    initialization_code = [Assignment(bar(final), 1)]
+
+    unassigned = setdiff(gradient_vars, assigned)
+
+    append!(initialization_code, [Assignment(var, 0) for var in unassigned])
+
+    code = forward_code ∪ initialization_code ∪ reverse_code
+
+    return code, final, gradient_vars
 end
 
 
@@ -155,38 +209,34 @@ make_tuple(s::Symbol) = make_tuple([s])
 # toexpr(ex::Assignment) = toexpr(Equation(ex.lhs, ex.rhs))
 
 function gradient_expr(vars, ex)
-    forward_code, final, reverse_code, gradient_vars = gradient_code(vars, ex)
+    symbolic_code, final, gradient_vars = gradient_code(vars, ex)
 
-    code = Expr(:block, 
-                toexpr.(forward_code)..., 
-                toexpr.(reverse_code)...)
-
-    return_tuple = make_tuple(toexpr.(gradient_vars))
-    # push!(code.args, :(return $return_tuple))
-
-    return code, final, return_tuple
+    code = Expr(:block, toexpr.(symbolic_code)...)
+                
+    return code, final, gradient_vars
 end
 
 
 function gradient(vars, ex::Num)
 
-    code, final, return_tuple = gradient_expr(vars, ex)
-    input_vars = make_tuple(Symbol.(vars))
+    code, final_var, gradient_vars = gradient_expr(vars, ex)
 
-    final2 = toexpr(final)
+    input_vars = toexpr(Symbolics.MakeTuple(vars))
+    final = toexpr(final_var)
+    gradient = toexpr(Symbolics.MakeTuple(gradient_vars))
 
-    quote
+    full_code = quote
         ($input_vars, ) -> begin
             $code
-            return $(final2), $return_tuple
+            return $(final), $(gradient)
         end
     end
 
+    return eval(full_code)
+
 end
 
 
 
-function gradient(vars, f)
-    code = gradient(vars, f(vars))
-    return eval(code)
-end
+gradient(vars, f) = gradient(vars, f(vars))
+
