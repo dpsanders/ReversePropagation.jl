@@ -21,7 +21,7 @@ remove_parameters(s, params) = (any(x -> isequal(x, s), params)) ? Variable(:_) 
 
 function rev(eq::Assignment, params)
 
-    @show eq, params
+    # @show eq, params
 
     vars = tuple(args(eq)...)
     return_vars = remove_constant.(tuple(lhs(eq), vars...))
@@ -86,10 +86,10 @@ function forward_backward_code(ex, vars, params=[])
 
     forward_code, last = cse_equations(ex)
     
-    @show forward_code
+    # @show forward_code
 
 
-    @show constraint_var, final_var
+    # @show constraint_var, final_var
 
     constraint_code = [Assignment(final_var, last),
                         Assignment(last, last ∩ constraint_var)]
@@ -135,7 +135,7 @@ function forward_backward_expr(ex, vars, params=[])
     
     symbolic_code, final_var, constraint_var = forward_backward_code(ex, vars, params)
 
-    @show symbolic_code
+    # @show symbolic_code
 
     code = toexpr.(symbolic_code)
     all_code = Expr(:block, code...)
@@ -158,19 +158,27 @@ function forward_backward_contractor(ex, vars, params=[])
 
     if !isempty(params)
         params_tuple = toexpr(Symbolics.MakeTuple(params))
-    else
-        params_tuple = :()
-    end
 
-
-    function_code = 
-        quote
-            ($input_vars, $constraint, $params_tuple) -> begin
-                $code
-                return $input_vars, $(final)
+        function_code = 
+            quote
+                ($input_vars, $constraint, $params_tuple) -> begin
+                    $code
+                    return $input_vars, $(final)
+                end
             end
-        end
-    
+
+    else
+
+        function_code = 
+            quote
+                ($input_vars, $constraint) -> begin
+                    $code
+                    return $input_vars, $(final)
+                end
+            end
+            
+    end
+        
     return eval(function_code)
 
 
