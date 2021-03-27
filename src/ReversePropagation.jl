@@ -1,10 +1,8 @@
 module ReversePropagation
 
-export gradient
+export gradient, forward_backward_contractor
 
 import Symbolics: toexpr
-
-
 
 using SymbolicUtils
 using SymbolicUtils: Sym, Term
@@ -14,6 +12,14 @@ using Symbolics
 using Symbolics: value, 
                 istree, operation, arguments, 
                 Assignment
+
+using IntervalContractors
+
+import Base: ∩
+import Base: ∪
+
+@register a ∩ b
+@register a ∪ b
 
 using DataStructures
 
@@ -34,5 +40,6 @@ include("chain_rules_interface.jl")
 # include("cse.jl")
 include("cse_new.jl")
 include("reverse_diff.jl")
+include("reverse_icp.jl")
 
 end

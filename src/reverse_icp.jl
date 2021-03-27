@@ -1,28 +1,16 @@
 # Reverse interval constraint propagation using Symbolics
 
-using Symbolics
-using Symbolics: toexpr, Sym, value
 
-using ReversePropagation: op, args, lhs, rhs, Assignment, cse_total, make_variable, make_tuple
-using ReversePropagation
-
-using IntervalContractors
-using IntervalArithmetic
-
-IntervalArithmetic.configure!(directed_rounding=:fast, powers=:fast)
+# import Base: ∩
+# import Base: ∪
 
 
-import Base: ∩
-import Base: ∪
+# 
 
 
-cd("/Users/dpsanders/Dropbox/packages/ReversePropagation")
-include("cse_new.jl")
 
-@register rev(a::Any, b, c, d)
-@register rev(a::Any, b, c)
-@register a ∩ b
-@register a ∪ b
+# @register a ∩ b
+# @register a ∪ b
 
 # Possibly should replace all calls to `rev` with calls to the actual 
 # reverse functions instead for speed
@@ -48,12 +36,14 @@ function rev(eq::Assignment, params)
 
 end
 
+@register rev(a::Any, b, c, d)
+@register rev(a::Any, b, c)
+
 
 # difference between reverse mode AD and reverse propagation:
 # reverse mode AD introduces *new* variables
 # reverse propagation can use the *same* variables
 
-@variables x, y, z, a
 # x ~ x ∩ (z - y)
 
 
@@ -112,22 +102,22 @@ function forward_backward_code(ex, vars, params=[])
     return code, final_var, constraint_var
 end
 
-code, final, constraint = forward_backward_code(x^2 + a*y^2, [x, y], [a])
+# code, final, constraint = forward_backward_code(x^2 + a*y^2, [x, y], [a])
 
-code
+# code
 
 Symbolics.toexpr(t::Tuple) = Symbolics.toexpr(Symbolics.MakeTuple(t))
 
-vars = @variables x, y
+# vars = @variables x, y
 
-ex = x^2 + a*y^2
-code, final, constraint = forward_backward_code(ex, vars, [a])
+# ex = x^2 + a*y^2
+# code, final, constraint = forward_backward_code(ex, vars, [a])
 
-code
-final
-constraint
+# code
+# final
+# constraint
 
-dump(toexpr.(code))
+# dump(toexpr.(code))
 
 # function forward_backward_expr(vars, ex)
 #     symbolic_code, final, constraint = forward_backward_code(vars, ex)
@@ -154,7 +144,7 @@ function forward_backward_expr(ex, vars, params=[])
 end
 
 
-forward_backward_expr(ex, vars, [a])
+# forward_backward_expr(ex, vars, [a])
 
 
 function forward_backward_contractor(ex, vars, params=[])
@@ -172,14 +162,12 @@ function forward_backward_contractor(ex, vars, params=[])
         params_tuple = :()
     end
 
-    
-
 
     function_code = 
         quote
             ($input_vars, $constraint, $params_tuple) -> begin
                 $code
-                return $(final), $input_vars
+                return $input_vars, $(final)
             end
         end
     
@@ -188,40 +176,41 @@ function forward_backward_contractor(ex, vars, params=[])
 
 end
 
-C = forward_backward_contractor(ex, vars, [a])
+# ex = x^2 + a * y^2
+# C = forward_backward_contractor(ex, vars, [a])
 
-const CC2 = forward_backward_contractor(ex, vars, [a])
+# const CC2 = forward_backward_contractor(ex, vars, [a])
 
-CC2((-10..10, -10..10), 0..1, 5)
-@btime CC2((-10..10, -10..10), 0..1, 6)
-@btime CC2((-10..10, -10..10), 0..1, 7)
-
-
-using BenchmarkTools
-
-@btime CC((-10..10, -10..10), 0..1)
-
-@code_native C((-10..10, -10..10), 0..1)
-
-CC(IntervalBox(-10..10, 2), 0..1)
+# CC2((-10..10, -10..10), 0..1, 5)
+# @btime CC2((-10..10, -10..10), 0..1, 6)
+# @btime CC2((-10..10, -10..10), 0..1, 7)
 
 
+# using BenchmarkTools
 
-vars = @variables x, y
-ex = 3x^2 + 4x^2 * y
+# @btime CC((-10..10, -10..10), 0..1)
 
+# @code_native C((-10..10, -10..10), 0..1)
 
-code, final, return_tuple = forward_backward_code(vars, 3x^2 + 4x^2 * y)
-
-expr = forward_backward_expr(vars, ex)
-
-C = forward_backward_contractor(vars, ex)
+# CC(IntervalBox(-10..10, 2), 0..1)
 
 
-using IntervalArithmetic
 
-C( (1..2, 3..4) )
+# vars = @variables x, y
+# ex = 3x^2 + 4x^2 * y
 
-ex = x^2 + y^2
 
-C( (-10..10, -10..10) )
+# code, final, return_tuple = forward_backward_code(vars, 3x^2 + 4x^2 * y)
+
+# expr = forward_backward_expr(vars, ex)
+
+# C = forward_backward_contractor(vars, ex)
+
+
+# using IntervalArithmetic
+
+# C( (1..2, 3..4) )
+
+# ex = x^2 + y^2
+
+# C( (-10..10, -10..10) )

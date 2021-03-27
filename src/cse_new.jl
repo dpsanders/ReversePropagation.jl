@@ -70,13 +70,13 @@ end
 cse(ex::Num) = cse(Symbolics.value(ex))
 
 
-@syms x y 
+# @syms x y 
 
-ex = exp(3x^2 + 4x^2 * y)
+# ex = exp(3x^2 + 4x^2 * y)
 
-dict, final = cse(ex)
+# dict, final = cse(ex)
 
-cse_equations(ex)
+# cse_equations(ex)
 
-dict
-final
+# dict
+# final

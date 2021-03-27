@@ -181,18 +181,15 @@ Return code for forward and reverse pass, as a vector of Assignments.
 `final` is the output variable from the forward pass.
 `gradient_vars` are the output variables from the reverse pass.
 """
-function gradient_code(vars, ex)
+function gradient_code(ex, vars)
     forward_code, final = cse_equations(ex)
     # reverse_code, gradient_vars = reverse_pass(vars, forward_code, final)
 
-
-
     reverse_code, gradient_vars, assigned = simple_reverse_pass(vars, forward_code)
 
-    initialization_code = [Assignment(bar(final), 1)]
+    initialization_code = [Assignment(bar(final), 1)]  # need typed 1 and 0?
 
     unassigned = setdiff(gradient_vars, assigned)
-
     append!(initialization_code, [Assignment(var, 0) for var in unassigned])
 
     code = forward_code ∪ initialization_code ∪ reverse_code
@@ -217,9 +214,9 @@ function gradient_expr(vars, ex)
 end
 
 
-function gradient(vars, ex::Num)
+function gradient(ex::Num, vars)
 
-    code, final_var, gradient_vars = gradient_expr(vars, ex)
+    code, final_var, gradient_vars = gradient_expr(ex, vars)
 
     input_vars = toexpr(Symbolics.MakeTuple(vars))
     final = toexpr(final_var)
@@ -238,5 +235,5 @@ end
 
 
 
-gradient(vars, f) = gradient(vars, f(vars))
+gradient(f, vars) = gradient(f(vars), vars)
 
