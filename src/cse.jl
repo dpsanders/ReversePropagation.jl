@@ -3,42 +3,10 @@
 # Original version together with Shashi Gowda:
 # https://github.com/JuliaSymbolics/SymbolicUtils.jl/issues/121
 
-const symbol_numbers = Dict{Symbol, Int}()
+## Works by keeping track of a dict of expressions that have already been seen
+## Each new expression is assigned a fresh symbolic name 
 
-"""Return a new, unique symbol like _z3.
-Updates the global dict `symbol_numbers`"""
-function make_symbol(s::Symbol)
 
-    i = get(symbol_numbers, s, 0)
-    symbol_numbers[s] = i + 1
-
-    if i == 0
-        return Symbol("_", s)
-    else
-        return Symbol("_", s, i)
-    end
-end
-
-make_symbol(c::Char) = make_symbol(Symbol(c))
-
-let current_symbol = 'a'
-
-    """Make a new symbol like `_c`. 
-    Cycles through the alphabet and adds numbers if necessary.
-    """
-    global function make_symbol()
-        current_sym = current_symbol
-
-        if current_sym < 'z'
-            current_symbol += 1
-        else
-            current_symbol = 'a'
-        end
-
-        return Variable(make_symbol(current_sym))
-
-    end
-end
 
 
 ## Remove powers
@@ -85,16 +53,18 @@ This version starts with the given variables"
 #     final = Postwalk(Chain([r]))(expr)
 #     [var => ex for (ex, var) in pairs(dict)], final
 # end
-
+3
 "CSE with pre-existing dict"
 function cse(vars, expr, dict::OrderedDict=initialize_dict(vars))
 
     orig_length = length(dict)
 
-    r = @rule ~x::(x -> x isa Term) => 
-        haskey(dict, ~x) ? dict[~x] : dict[~x] = make_symbol()
+    rules = [
+        @rule ~x::(x -> (istree(x) || x isa Sym)) => 
+            haskey(dict, ~x) ? dict[~x] : dict[~x] = make_symbol()
+    ]
 
-    final = Postwalk(Chain([r]))(expr)  # modifies dict
+    final = Postwalk(Chain(rules))(expr)  # *modifies* dict
     # @show final
     # @show dict
 
@@ -113,16 +83,16 @@ initialize_dict(vars) = OrderedDict{Any, Any}(v => v for v in value.(vars))
 
 
 
-make_equation(p::Pair) = Equation(p[1], p[2])
+make_Assignment(p::Pair) = Assignment(p[1], p[2])
 
 
 cse_total(vars, ex::Num) = cse_total(vars, value(ex))
 cse_total(vars, ex::Num, dict::OrderedDict) = cse_total(vars, value(ex), dict)
 
-"Perform CSE and return a vector of `Equation`s"
+"Perform CSE and return a vector of `Assignment`s"
 function cse_total(vars, ex, dict=initialize_dict(vars))
     ex2, final = cse(vars, ex, dict)
-    ex3 = make_equation.(ex2)
+    ex3 = make_Assignment.(ex2)
 
     # remove redefinitions of input variables:
     ex4 = [eq for eq in ex3 if !(any(x -> isequal(x, eq.lhs), vars))]
@@ -130,23 +100,23 @@ function cse_total(vars, ex, dict=initialize_dict(vars))
     return ex4, final
 end
 
-function cse_total(vars, eq::Equation, dict::OrderedDict)
+function cse_total(vars, eq::Assignment, dict::OrderedDict)
     eqns, final = cse_total(vars, rhs(eq), dict)
     
-    # replace final equation with the correct variable 
+    # replace final Assignment with the correct variable 
     # from the left-hand side of eq:
 
     # this currently "wastes" a generated variable
-    # eqns[end] = Equation(lhs(eq), rhs(eqns[end]))
+    # eqns[end] = Assignment(lhs(eq), rhs(eqns[end]))
 
-    # alternative: add a new equation:
-    push!(eqns, Equation(lhs(eq), final))
+    # alternative: add a new Assignment:
+    push!(eqns, Assignment(lhs(eq), final))
 
     return eqns
 end
 
 
-function cse_total(vars, eqs::Vector{Equation})
+function cse_total(vars, eqs::Vector{Assignment})
     dict = initialize_dict(vars)
 
     all_eqns = []

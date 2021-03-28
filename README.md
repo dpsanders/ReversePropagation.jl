@@ -32,17 +32,17 @@ julia> ex = f(vars);  #  x + (x * y)
 julia> forward_code, final, reverse_code, gradient_vars = ReversePropagation.gradient_code(vars, ex);
 
 julia> forward_code
-2-element Vector{Equation}:
- Equation(_g, x * y)
- Equation(_h, x + _g)
+2-element Vector{Assignment}:
+ Assignment(_g, x * y)
+ Assignment(_h, x + _g)
 
 julia> reverse_code
-5-element Vector{Equation}:
- Equation(_h̄₀, 1)
- Equation(x̄₀, _h̄₀)
- Equation(_ḡ₀, _h̄₀)
- Equation(x̄₁, x̄₀ + (_ḡ₀ * y))
- Equation(ȳ₀, x * _ḡ₀)
+5-element Vector{Assignment}:
+ Assignment(_h̄₀, 1)
+ Assignment(x̄₀, _h̄₀)
+ Assignment(_ḡ₀, _h̄₀)
+ Assignment(x̄₁, x̄₀ + (_ḡ₀ * y))
+ Assignment(ȳ₀, x * _ḡ₀)
  ```
 
 ## Content

@@ -1,10 +1,10 @@
 # Interface for using ChainRules.jl
 
-Base.conj(x::Num) = x   # assuming reals
-Base.complex(x::Num) = x
-Base.float(x::Num) = x
+# Base.conj(x::Num) = x   # assuming reals
+# Base.complex(x::Num) = x
+# Base.float(x::Num) = x
 
-@scalar_rule(^(x::Num, n::Integer), (n*x^(n-1), Zero()))
+@scalar_rule(^(x::Num, n::Integer), (n==1 ? 1 : n==2 ? 2x : n*x^(n-1), Zero()))
 
 adj(f, z̄::Num, x::Num) = (rrule(f, x)[2](z̄))[2]
 adj(f, z̄, x) = adj(f, Num(z̄), Num(x))
@@ -26,13 +26,13 @@ tangent(var::Num) = tangent(value(var))
 tangent(var::Sym) = Sym{Tangent{Real}}(Symbol(var, "̇"))
 tangent(x::Real) = 0  # derivative of a constant
 
-function tangent(eq::Equation)
+function tangent(eq::Assignment)
     
     vars = args(eq)
     rhs_tangents = Num.(tangent.(args(eq)))
     lhs_tangent = Num(tangent(lhs(eq)))
 
-    return Equation(lhs_tangent,
+    return Assignment(lhs_tangent,
                     frule( (Zero(), rhs_tangents...), 
                     op(eq), vars...)[2]
     )

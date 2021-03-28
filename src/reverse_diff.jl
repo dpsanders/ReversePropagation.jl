@@ -1,18 +1,18 @@
 
-lhs(eq::Equation) = eq.lhs
-rhs(eq::Equation) = value(eq.rhs)
+lhs(eq::Assignment) = eq.lhs
+rhs(eq::Assignment) = value(eq.rhs)
 
-op(eq::Equation) = rhs(eq).f
-args(eq::Equation) = Num.(rhs(eq).arguments)
+op(eq::Assignment) = operation(rhs(eq))
+args(eq::Assignment) = Num.(arguments(rhs(eq)))
 
 name(var) = value(var).name
-bar(var) = Variable(Symbol(var, "̄"))
+bar(var) = Variable(Symbol(var, '̄'))  # the character is the overbar symbol (on top of first `'`)
 
 
 # bar(op) = Variable()
 
-# "Construct adjoint of a given equation with accumulation"
-# function adj(eq::Equation)
+# "Construct adjoint of a given Assignment with accumulation"
+# function adj(eq::Assignment)
 #     vars = args(eq)
 #     adjoints = Adjoint(op(eq), vars)
 
@@ -21,7 +21,7 @@ bar(var) = Variable(Symbol(var, "̄"))
 #     eqns = map(zip(vars, adjoints)) do (var, adj)
 #         barred = bar(var)
 
-#         Equation(barred, barred + bar_lhs * adj)
+#         Assignment(barred, barred + bar_lhs * adj)
 #     end
 
 #     return eqns
@@ -55,7 +55,7 @@ function numbered_variable!(num_times_used, var, increment=false)
 end
 
 
-function adj(eq::Equation)
+function adj(eq::Assignment)
     vars = value.(args(eq))
 
     bar_lhs = bar(lhs(eq))
@@ -64,17 +64,47 @@ function adj(eq::Equation)
 
     eqns = map(zip(vars, adjoints)) do (var, adj)
         @show var, adj, typeof(var)
-        if var isa Sym{Tangent{Real}}
+        #if var isa Sym{Tangent{Real}}  # for linearization pass
             barred = bar(var)
 
-            Equation(barred, barred + adj)
-        end
+            Assignment(barred, barred + adj)
+        #end
     end
 
     return eqns
 end
 
-function adj(num_times_used, eq::Equation)
+# modifies the Set assigned of variables which have already been assigned
+function simple_adj(eq::Assignment, assigned)
+    
+    vars = ReversePropagation.args(eq)
+    bar_lhs = bar(lhs(eq))
+    
+    adjoints = adj(op(eq), bar_lhs, vars...)
+
+    eqns = Assignment[]
+
+    for (var, adjoint) in zip(vars, adjoints)
+
+        !isa(var, Num) && continue
+
+        barred = bar(var)
+
+        if any(x -> isequal(x, barred), assigned)
+            push!(eqns, Assignment(barred, barred + adjoint))
+
+        else
+            push!(eqns, Assignment(barred, adjoint))
+            push!(assigned, barred)
+        end
+
+    end
+
+    return eqns
+end
+
+
+function adj(num_times_used, eq::Assignment)
 
     # @show num_times_used
     # @show eq
@@ -89,7 +119,7 @@ function adj(num_times_used, eq::Equation)
 
     adjoints = adj(op(eq), numbered_bar_lhs, vars...)
 
-    eqns = Equation[]
+    eqns = Assignment[]
 
     # @show bar_lhs
     for (var, adj) in zip(vars, adjoints)
@@ -102,13 +132,13 @@ function adj(num_times_used, eq::Equation)
         is_new, numbered = numbered_variable!(num_times_used, barred)
 
         if is_new # first use
-            # Equation(numbered, numbered_bar_lhs * adj)
-            push!(eqns, Equation(numbered, adj))
+            # Assignment(numbered, numbered_bar_lhs * adj)
+            push!(eqns, Assignment(numbered, adj))
 
         else  # re-use so generate new variable
             new_num, barred_new = numbered_variable!(num_times_used, barred, true)
-            # Equation(barred_new, numbered + numbered_bar_lhs * adj)
-            push!(eqns, Equation(barred_new, numbered + adj))
+            # Assignment(barred_new, numbered + numbered_bar_lhs * adj)
+            push!(eqns, Assignment(barred_new, numbered + adj))
 
         end
     end
@@ -121,7 +151,7 @@ function reverse_pass(vars, code, final)
     num_times_used = Dict{Num, Int}()
 
     num, final_bar = numbered_variable!(num_times_used, bar(final))
-    reverse_code = [Equation(final_bar, 1)]
+    reverse_code = [Assignment(final_bar, 1)]
 
     for eq in reverse(code)
         # @show eq
@@ -132,18 +162,39 @@ function reverse_pass(vars, code, final)
     return reverse_code, final_vars
 end
 
+function simple_reverse_pass(vars, forward_code)
+    
+    assigned = Set()  # which variables have already been assigned
+    
+    reverse_code = reduce(vcat, simple_adj.(reverse(forward_code), Ref(assigned)))
+
+    final_vars = bar.(vars)
+
+    return reverse_code, final_vars, assigned
+
+end
+
 
 
 """
-Return code for forward and reverse pass as MTK `Equation`s.
+Return code for forward and reverse pass, as a vector of Assignments.
 `final` is the output variable from the forward pass.
 `gradient_vars` are the output variables from the reverse pass.
 """
-function gradient_code(vars, ex)
-    forward_code, final = cse_total(vars, ex)
-    reverse_code, gradient_vars = reverse_pass(vars, forward_code, final)
+function gradient_code(ex, vars)
+    forward_code, final = cse_equations(ex)
+    # reverse_code, gradient_vars = reverse_pass(vars, forward_code, final)
 
-    return forward_code, final, reverse_code, gradient_vars
+    reverse_code, gradient_vars, assigned = simple_reverse_pass(vars, forward_code)
+
+    initialization_code = [Assignment(bar(final), 1)]  # need typed 1 and 0?
+
+    unassigned = setdiff(gradient_vars, assigned)
+    append!(initialization_code, [Assignment(var, 0) for var in unassigned])
+
+    code = forward_code ∪ initialization_code ∪ reverse_code
+
+    return code, final, gradient_vars
 end
 
 
@@ -152,40 +203,37 @@ end
 make_tuple(args) = Expr(:tuple, args...)
 make_tuple(s::Symbol) = make_tuple([s])
 
+# toexpr(ex::Assignment) = toexpr(Equation(ex.lhs, ex.rhs))
 
 function gradient_expr(vars, ex)
-    forward_code, final, reverse_code, gradient_vars = gradient_code(vars, ex)
+    symbolic_code, final, gradient_vars = gradient_code(vars, ex)
 
-    code = Expr(:block, 
-                MTK.toexpr.(forward_code)..., 
-                MTK.toexpr.(reverse_code)...)
-
-    return_tuple = make_tuple(MTK.toexpr.(gradient_vars))
-    # push!(code.args, :(return $return_tuple))
-
-    return code, final, return_tuple
+    code = Expr(:block, toexpr.(symbolic_code)...)
+                
+    return code, final, gradient_vars
 end
 
 
-function gradient(vars, ex::Num)
+function gradient(ex::Num, vars)
 
-    code, final, return_tuple = gradient_expr(vars, ex)
-    input_vars = make_tuple(Symbol.(vars))
+    code, final_var, gradient_vars = gradient_expr(ex, vars)
 
-    final2 = MTK.toexpr(final)
+    input_vars = toexpr(Symbolics.MakeTuple(vars))
+    final = toexpr(final_var)
+    gradient = toexpr(Symbolics.MakeTuple(gradient_vars))
 
-    quote
+    full_code = quote
         ($input_vars, ) -> begin
             $code
-            return $(final2), $return_tuple
+            return $(final), $(gradient)
         end
     end
 
+    return eval(full_code)
+
 end
 
 
 
-function gradient(vars, f)
-    code = gradient(vars, f(vars))
-    return eval(code)
-end
+gradient(f, vars) = gradient(f(vars), vars)
+
