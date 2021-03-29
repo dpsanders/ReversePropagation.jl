@@ -12,7 +12,7 @@ julia> f( (x, y) ) = x + (x * y);
 
 julia> vars = @variables x, y;
 
-julia> ∇f = gradient(vars, f);
+julia> ∇f = ReversePropagation.gradient(vars, f);
 
 julia> ∇f( (1, 2) )
 (3, (3, 1))
