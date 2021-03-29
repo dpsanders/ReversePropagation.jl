@@ -21,8 +21,7 @@ import Base: ∪
 @register a ∩ b
 @register a ∪ b
 
-using DataStructures
-
+using OrderedCollections
 
 using ChainRules
 
