@@ -20,6 +20,7 @@ Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 [compat]
 ChainRules = "0.7"
 DataStructures = "0.18"
+ForwardDiff = "0.10"
 SymbolicUtils = "0.8, 0.9"
 Symbolics = "0.1"
 julia = "1.5, 1.6"
