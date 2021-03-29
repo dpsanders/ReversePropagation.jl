@@ -45,10 +45,11 @@ julia> reverse_code
  Assignment(ȳ₀, x * _ḡ₀)
  ```
 
-## Content
-Currently implemented: simple, scalar reverse-mode AD. 
+## Currently implemented
 
-In preparation: Interval constraint propagation
+- Gradient for scalar-valued functions of n variables using reverse-mode AD. 
+
+- Forward-backward contractor (HC4Revise) using interval constraint propagation
 
 ## License
 The code is licensed under the MIT license.
