@@ -1,12 +1,12 @@
 # ReversePropagation.jl
 
-A Julia package for reverse propagation along a syntax tree, using source-to-source transformation via [ModelingToolkit.jl](https://github.com/SciML/ModelingToolkit.jl).
+A Julia package for reverse propagation along a syntax tree, using source-to-source transformation via [Symbolics.jl](https://github.com/JuliaSymbolics/Symbolics.jl).
 
 
 ## Basic usage
 
 ```jl
-julia> using ModelingToolkit, ReversePropagation
+julia> using Symbolics, ReversePropagation
 
 julia> f( (x, y) ) = x + (x * y);
 
@@ -53,4 +53,4 @@ In preparation: Interval constraint propagation
 ## License
 The code is licensed under the MIT license.
 
-Copyright: David P. Sanders, 2020
+Copyright: David P. Sanders, 2021
