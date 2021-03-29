@@ -22,7 +22,7 @@ The `gradient` function returns both the value of the function and the gradient.
 
 ## Tracing and transformations
 
-The package works by tracing an input function into a `ModelingToolkit` object. It then transforms those, before finally emitting Julia code.
+The package works by tracing an input Julia function into a `Symbolics.jl` expression. It then transforms that expression into a static single-assignment (SSA) form, before finally emitting Julia code.
 
 The unexported `gradient_code` function can be used to inspect this process:
 
