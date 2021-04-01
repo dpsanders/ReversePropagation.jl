@@ -22,7 +22,7 @@ julia> ∇f( (1, 2) )
 
 The `gradient` function returns both the value of the function and the gradient.
 
-## Basic usage: Forward&ndash;backward contractor
+## Basic usage: Forward&ndash;backward contractor (interval constraint propagation)
 
 The forward&ndash;backward contractor corresponding to an expression takes a box and tries to exclude parts of the box that do not satisfy a constraint.
 
