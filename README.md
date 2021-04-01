@@ -59,7 +59,7 @@ julia> C = forward_backward_contractor(ex, vars, [a])
 julia> aa = 1..1  # value of the variable `a` to use
 
 julia> C(X, constraint, aa) == ( (-1..1, -1..1), 0..200 )
-
+```
 
 
 
@@ -83,7 +83,7 @@ julia> code
  Assignment(x̄, _b̄)
  Assignment(x̄, x̄ + _ā*y)
  Assignment(ȳ, _ā*x)
- ```
+```
 
 
 ## License
