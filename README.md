@@ -1,6 +1,6 @@
 # ReversePropagation.jl
 
-A Julia package for reverse propagation along a syntax tree, using source-to-source transformation via [ModelingToolkit.jl](https://github.com/SciML/ModelingToolkit.jl).
+A Julia package for reverse propagation along a syntax tree, using source-to-source transformation via [Symbolics.jl](https://github.com/JuliaSymbolics/Symbolics.jl).
 
 
 ## Basic usage: Reverse-mode automatic differentiation
@@ -8,13 +8,17 @@ A Julia package for reverse propagation along a syntax tree, using source-to-sou
 The `gradient` function calculates the gradient of an expression or function with respect to given variables:
 
 ```jl
-julia> using ModelingToolkit, ReversePropagation
+julia> using Symbolics, ReversePropagation
 
 julia> f( (x, y) ) = x + (x * y);
 
 julia> vars = @variables x, y;
 
+<<<<<<< HEAD
 julia> ∇f = ReversePropagation.gradient(f, vars);
+=======
+julia> ∇f = ReversePropagation.gradient(vars, f);
+>>>>>>> f3d42e46c16ebfbdf842b164444c0250a666791e
 
 julia> ∇f( (1, 2) )
 (3, (3, 1))
@@ -64,7 +68,7 @@ julia> C(X, constraint, aa) == ( (-1..1, -1..1), 0..200 )
 
 ## Tracing and transformations
 
-The package works by tracing an input function into a `Symbolics.jl` object. It then transforms that, before finally emitting Julia code.
+The package works by tracing an input Julia function into a `Symbolics.jl` expression. It then transforms that expression into a static single-assignment (SSA) form, before finally emitting Julia code.
 
 The unexported `gradient_code` function can be used to inspect this process:
 
@@ -88,5 +92,4 @@ julia> code
 ## License
 The code is licensed under the MIT license.
 
-Copyright: David P. Sanders, 2020
-
+Copyright: David P. Sanders, 2021
