@@ -4,7 +4,7 @@
 # Base.complex(x::Num) = x
 # Base.float(x::Num) = x
 
-@scalar_rule(^(x::Num, n::Integer), (n==1 ? 1 : n==2 ? 2x : n*x^(n-1), Zero()))
+@scalar_rule(^(x::Num, n::Integer), (n==1 ? 1 : n==2 ? 2x : n*x^(n-1), ZeroTangent()))
 
 adj(f, z̄::Num, x::Num) = (rrule(f, x)[2](z̄))[2]
 adj(f, z̄, x) = adj(f, Num(z̄), Num(x))
@@ -33,14 +33,14 @@ function tangent(eq::Assignment)
     lhs_tangent = Num(tangent(lhs(eq)))
 
     return Assignment(lhs_tangent,
-                    frule( (Zero(), rhs_tangents...), 
+                    frule( (ZeroTangent(), rhs_tangents...), 
                     op(eq), vars...)[2]
     )
 end
 
 
 
-# julia> frule((Zero(), ẋ, ẏ), *, x, y)
+# julia> frule((ZeroTangent(), ẋ, ẏ), *, x, y)
 # (x * y, (ẋ * y) + (x * ẏ))
 
 # julia> dargs = Num.(dotify.(args(eq)))
@@ -50,6 +50,6 @@ end
 #  x
 #  y
 
-# julia> frule( (Zero(), dargs...), op(eq), a...)
+# julia> frule( (ZeroTangent(), dargs...), op(eq), a...)
 # (x * y, (ẋ * y) + (x * ẏ))
 
