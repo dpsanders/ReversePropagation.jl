@@ -214,7 +214,7 @@ function gradient_expr(vars, ex)
 end
 
 
-function gradient(ex::Num, vars)
+function gradient(ex::Num, vars, include_value=false)
 
     code, final_var, gradient_vars = gradient_expr(ex, vars)
 
@@ -222,10 +222,20 @@ function gradient(ex::Num, vars)
     final = toexpr(final_var)
     gradient = toexpr(Symbolics.MakeTuple(gradient_vars))
 
-    full_code = quote
-        ($input_vars, ) -> begin
-            $code
-            return $(final), $(gradient)
+    if include_value 
+        full_code = quote
+            ($input_vars, ) -> begin
+                $code
+                return $(gradient), $(final)
+            end
+        end
+
+    else
+        full_code = quote
+            ($input_vars, ) -> begin
+                $code
+                return $(gradient)
+            end
         end
     end
 
