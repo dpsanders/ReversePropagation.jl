@@ -23,7 +23,7 @@ import Base: ∪
 
 using OrderedCollections
 
-using ChainRules
+using ChainRulesCore, ChainRules
 
 
 
