@@ -35,6 +35,8 @@ julia> ex = x^2 + y^2
     
 julia> C = forward_backward_contractor(ex, vars)  # construct the contractor
 
+julia> using IntervalArithmetic
+
 julia> constraint = 0..1
 
 julia> X = IntervalBox(-10..10, 2)
