@@ -36,9 +36,6 @@ function rev(eq::Assignment, params)
 
 end
 
-#@register rev(a::Any, b, c, d)
-#@register rev(a::Any, b, c)
-
 
 # difference between reverse mode AD and reverse propagation:
 # reverse mode AD introduces *new* variables
