@@ -5,18 +5,18 @@
 # import Base: ∪
 
 
-# 
+#
 
 
 
 # @register a ∩ b
 # @register a ∪ b
 
-# Possibly should replace all calls to `rev` with calls to the actual 
+# Possibly should replace all calls to `rev` with calls to the actual
 # reverse functions instead for speed
 
 
-remove_constant(s) = (s isa Num || s isa Sym) ? s : Variable(:_)  
+remove_constant(s) = (s isa Num || s isa Sym) ? s : Variable(:_)
 remove_parameters(s, params) = (any(x -> isequal(x, s), params)) ? Variable(:_) : s
 
 function rev(eq::Assignment, params)
@@ -25,8 +25,8 @@ function rev(eq::Assignment, params)
 
     vars = tuple(args(eq)...)
     return_vars = remove_constant.(tuple(lhs(eq), vars...))
-    # return_vars = remove_constant.(tuple(lhs(eq), vars...)) 
-    
+    # return_vars = remove_constant.(tuple(lhs(eq), vars...))
+
     return_vars = remove_parameters.(return_vars, Ref(params))
 
 
@@ -36,8 +36,8 @@ function rev(eq::Assignment, params)
 
 end
 
-@register rev(a::Any, b, c, d)
-@register rev(a::Any, b, c)
+#@register rev(a::Any, b, c, d)
+#@register rev(a::Any, b, c)
 
 
 # difference between reverse mode AD and reverse propagation:
@@ -58,8 +58,9 @@ const binary_functions = Dict(
                     :^     => :power_rev,
                     );
 
-for (f, f_rev) in binary_functions 
+for (f, f_rev) in binary_functions
     @eval rev(::typeof($f), z::Real, x::Real, y::Real) = $f_rev(z, x, y)
+    @eval @register rev(a::typeof($f), z, x, y)
 end
 
 
@@ -75,6 +76,7 @@ const unary_functions = [:sqrt, :abs,
 for f in unary_functions
     f_rev = Symbol(f, :_rev)
     @eval rev(::typeof($f), z::Real, x::Real) = $f_rev(z, x)
+    @eval @register rev(a::typeof($f), z::Real, x::Real)
 end
 
 
@@ -85,7 +87,7 @@ function forward_backward_code(ex, vars, params=[])
     constraint_var = make_variable(:constraint)   # symbolic constraint variable
 
     forward_code, last = cse_equations(ex)
-    
+
     # @show forward_code
 
 
@@ -132,7 +134,7 @@ Symbolics.toexpr(t::Tuple) = Symbolics.toexpr(Symbolics.MakeTuple(t))
 
 "Build Julia code for forward_backward contractor"
 function forward_backward_expr(ex, vars, params=[])
-    
+
     symbolic_code, final_var, constraint_var = forward_backward_code(ex, vars, params)
 
     # @show symbolic_code
@@ -150,7 +152,7 @@ end
 function forward_backward_contractor(ex, vars, params=[])
 
     code, final_var, constraint_var = forward_backward_expr(ex, vars, params)
-    
+
     input_vars = toexpr(Symbolics.MakeTuple(vars))
     final = toexpr(final_var)
 
@@ -159,7 +161,7 @@ function forward_backward_contractor(ex, vars, params=[])
     if !isempty(params)
         params_tuple = toexpr(Symbolics.MakeTuple(params))
 
-        function_code = 
+        function_code =
             quote
                 ($input_vars, $constraint, $params_tuple) -> begin
                     $code
@@ -169,16 +171,16 @@ function forward_backward_contractor(ex, vars, params=[])
 
     else
 
-        function_code = 
+        function_code =
             quote
                 ($input_vars, $constraint) -> begin
                     $code
                     return $input_vars, $(final)
                 end
             end
-            
+
     end
-        
+
     return eval(function_code)
 
 
