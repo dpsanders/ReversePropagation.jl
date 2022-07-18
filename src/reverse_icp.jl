@@ -56,8 +56,8 @@ const binary_functions = Dict(
                     );
 
 for (f, f_rev) in binary_functions
-    @eval rev(::typeof($f), z::Real, x::Real, y::Real) = $f_rev(z, x, y)
-    @eval @register rev(a::typeof($f), z, x, y)
+    @eval rev(::typeof($f), z::Real, x::Real, y::Real) = $f_rev(z, x, y) 
+    @eval @register_symbolic rev(a::typeof($f), z, x, y) false
 end
 
 
@@ -73,7 +73,7 @@ const unary_functions = [:sqrt, :abs,
 for f in unary_functions
     f_rev = Symbol(f, :_rev)
     @eval rev(::typeof($f), z::Real, x::Real) = $f_rev(z, x)
-    @eval @register rev(a::typeof($f), z::Real, x::Real)
+    @eval @register_symbolic rev(a::typeof($f), z::Real, x::Real) false
 end
 
 

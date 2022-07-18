@@ -18,8 +18,8 @@ using IntervalContractors
 import Base: ∩
 import Base: ∪
 
-@register a ∩ b
-@register a ∪ b
+@register_symbolic a ∩ b false
+@register_symbolic a ∪ b false
 
 using OrderedCollections
 
