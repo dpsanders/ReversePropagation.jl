@@ -2,7 +2,7 @@ module ReversePropagation
 
 export gradient, forward_backward_contractor
 
-import Symbolics: toexpr
+import Symbolics: toexpr, variable
 
 using SymbolicUtils
 using SymbolicUtils: Sym, Term

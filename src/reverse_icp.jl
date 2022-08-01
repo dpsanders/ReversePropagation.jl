@@ -16,8 +16,8 @@
 # reverse functions instead for speed
 
 
-remove_constant(s) = (s isa Num || s isa Sym) ? s : Variable(:_)
-remove_parameters(s, params) = (any(x -> isequal(x, s), params)) ? Variable(:_) : s
+remove_constant(s) = (s isa Num || s isa Sym) ? s : variable(:_)
+remove_parameters(s, params) = (any(x -> isequal(x, s), params)) ? variable(:_) : s
 
 function rev(eq::Assignment, params)
 
