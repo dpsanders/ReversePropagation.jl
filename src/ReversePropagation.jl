@@ -2,7 +2,7 @@ module ReversePropagation
 
 export gradient, forward_backward_contractor
 
-import Symbolics: toexpr
+import Symbolics: toexpr, variable
 
 using SymbolicUtils
 using SymbolicUtils: Sym, Term
@@ -18,8 +18,8 @@ using IntervalContractors
 import Base: ∩
 import Base: ∪
 
-@register a ∩ b
-@register a ∪ b
+@register_symbolic a ∩ b false
+@register_symbolic a ∪ b false
 
 using OrderedCollections
 

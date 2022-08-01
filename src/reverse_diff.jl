@@ -9,7 +9,7 @@ name(var) = value(var).name
 bar(var) = Variable(Symbol(var, '̄'))  # the character is the overbar symbol (on top of first `'`)
 
 
-# bar(op) = Variable()
+
 
 # "Construct adjoint of a given Assignment with accumulation"
 # function adj(eq::Assignment)
@@ -30,7 +30,7 @@ bar(var) = Variable(Symbol(var, '̄'))  # the character is the overbar symbol (o
 
 "Make a new variable by adding a number to an old variable, e.g. `x` -> `x3`"
 function add_number(var, num)
-    return Variable(var, num)   # Variable(Symbol(var, "_", num))
+    return variable(var, num)   # Variable(Symbol(var, "_", num))
 end
 
 
