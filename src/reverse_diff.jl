@@ -6,7 +6,7 @@ op(eq::Assignment) = operation(rhs(eq))
 args(eq::Assignment) = Num.(arguments(rhs(eq)))
 
 name(var) = value(var).name
-bar(var) = Variable(Symbol(var, '̄'))  # the character is the overbar symbol (on top of first `'`)
+bar(var) = variable(Symbol(var, '̄'))  # the character is the overbar symbol (on top of first `'`)
 
 
 
