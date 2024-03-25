@@ -17,7 +17,7 @@ end
 
 make_symbol(c::Char) = make_symbol(Symbol(c))
 
-make_variable(s) = Variable(make_symbol(s))
+make_variable(s) = variable(make_symbol(s))
 
 let current_symbol = 'a'
 
