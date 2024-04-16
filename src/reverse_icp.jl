@@ -25,15 +25,11 @@ remove_parameters(s, params) = (any(x -> isequal(x, s), params)) ? variable(:_) 
 
 function rev(eq::Assignment, params)
 
-    @show eq, params
-
     vars = tuple(args(eq)...)
     return_vars = remove_constant.(tuple(lhs(eq), vars...))
     # return_vars = remove_constant.(tuple(lhs(eq), vars...))
 
-    @show return_vars
     return_vars = remove_parameters.(return_vars, Ref(params))
-
 
     reverse = rev(op(eq), lhs(eq), vars...)
 
