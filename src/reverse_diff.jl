@@ -63,7 +63,6 @@ function adj(eq::Assignment)
     adjoints = adj(op(eq), bar_lhs, vars...)
 
     eqns = map(zip(vars, adjoints)) do (var, adj)
-        @show var, adj, typeof(var)
         #if var isa Sym{Tangent{Real}}  # for linearization pass
             barred = bar(var)
 
@@ -90,8 +89,6 @@ function simple_adj(eq::Assignment, assigned)
         ((value isa Real) || (value isa Sym)) && continue
 
         barred = bar(var)
-
-        @show barred, adjoint
 
         if any(x -> isequal(x, barred), assigned)
             push!(eqns, Assignment(barred, barred + adjoint))
@@ -186,16 +183,10 @@ Return code for forward and reverse pass, as a vector of Assignments.
 """
 function gradient_code(ex, vars)
 
-    @show ex, vars
-
     forward_code, final = cse_equations(ex)
     # reverse_code, gradient_vars = reverse_pass(vars, forward_code, final)
 
-    @show forward_code
-
     reverse_code, gradient_vars, assigned = simple_reverse_pass(vars, forward_code)
-
-    @show reverse_code
 
     initialization_code = [Assignment(bar(final), 1)]  # need typed 1 and 0?
 
