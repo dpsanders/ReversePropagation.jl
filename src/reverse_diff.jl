@@ -205,8 +205,8 @@ make_tuple(s::Symbol) = make_tuple([s])
 
 # toexpr(ex::Assignment) = toexpr(Equation(ex.lhs, ex.rhs))
 
-function gradient_expr(vars, ex)
-    symbolic_code, final, gradient_vars = gradient_code(vars, ex)
+function gradient_expr(ex, vars)
+    symbolic_code, final, gradient_vars = gradient_code(ex, vars)
 
     code = Expr(:block, toexpr.(symbolic_code)...)
                 
