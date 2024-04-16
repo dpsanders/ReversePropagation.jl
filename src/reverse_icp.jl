@@ -16,19 +16,20 @@
 # reverse functions instead for speed
 
 
-remove_constant(s) = (s isa Num || s isa Sym) ? s : variable(:_)
+function remove_constant(s)
+    value = Symbolics.value(s)
+    return (value isa Real || value isa Sym) ? variable(:_) : value
+end
+
 remove_parameters(s, params) = (any(x -> isequal(x, s), params)) ? variable(:_) : s
 
 function rev(eq::Assignment, params)
-
-    # @show eq, params
 
     vars = tuple(args(eq)...)
     return_vars = remove_constant.(tuple(lhs(eq), vars...))
     # return_vars = remove_constant.(tuple(lhs(eq), vars...))
 
     return_vars = remove_parameters.(return_vars, Ref(params))
-
 
     reverse = rev(op(eq), lhs(eq), vars...)
 

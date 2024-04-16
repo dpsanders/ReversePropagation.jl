@@ -63,7 +63,6 @@ function adj(eq::Assignment)
     adjoints = adj(op(eq), bar_lhs, vars...)
 
     eqns = map(zip(vars, adjoints)) do (var, adj)
-        @show var, adj, typeof(var)
         #if var isa Sym{Tangent{Real}}  # for linearization pass
             barred = bar(var)
 
@@ -76,17 +75,18 @@ end
 
 # modifies the Set assigned of variables which have already been assigned
 function simple_adj(eq::Assignment, assigned)
-    
+
     vars = ReversePropagation.args(eq)
     bar_lhs = bar(lhs(eq))
-    
+
     adjoints = adj(op(eq), bar_lhs, vars...)
 
     eqns = Assignment[]
 
     for (var, adjoint) in zip(vars, adjoints)
 
-        !isa(var, Num) && continue
+        value = Symbolics.value(var)
+        ((value isa Real) || (value isa Sym)) && continue
 
         barred = bar(var)
 
@@ -163,9 +163,9 @@ function reverse_pass(vars, code, final)
 end
 
 function simple_reverse_pass(vars, forward_code)
-    
+
     assigned = Set()  # which variables have already been assigned
-    
+
     reverse_code = reduce(vcat, simple_adj.(reverse(forward_code), Ref(assigned)))
 
     final_vars = bar.(vars)
@@ -182,6 +182,7 @@ Return code for forward and reverse pass, as a vector of Assignments.
 `gradient_vars` are the output variables from the reverse pass.
 """
 function gradient_code(ex, vars)
+
     forward_code, final = cse_equations(ex)
     # reverse_code, gradient_vars = reverse_pass(vars, forward_code, final)
 
@@ -205,11 +206,11 @@ make_tuple(s::Symbol) = make_tuple([s])
 
 # toexpr(ex::Assignment) = toexpr(Equation(ex.lhs, ex.rhs))
 
-function gradient_expr(vars, ex)
-    symbolic_code, final, gradient_vars = gradient_code(vars, ex)
+function gradient_expr(ex, vars)
+    symbolic_code, final, gradient_vars = gradient_code(ex, vars)
 
     code = Expr(:block, toexpr.(symbolic_code)...)
-                
+
     return code, final, gradient_vars
 end
 
