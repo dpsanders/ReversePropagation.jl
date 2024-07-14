@@ -1,16 +1,17 @@
 # Reverse interval constraint propagation using Symbolics
 
 
-# import Base: ∩
-# import Base: ∪
+# import Base: ⊓
+# import Base: ⊔
 
 
 #
 
+⊔
+⊔
 
-
-# @register a ∩ b
-# @register a ∪ b
+# @register a ⊓ b
+# @register a ⊔ b
 
 # Possibly should replace all calls to `rev` with calls to the actual
 # reverse functions instead for speed
@@ -42,7 +43,7 @@ end
 # reverse mode AD introduces *new* variables
 # reverse propagation can use the *same* variables
 
-# x ~ x ∩ (z - y)
+# x ~ x ⊓ (z - y)
 
 
 # reverse ops from IntervalContractors:
@@ -92,12 +93,12 @@ function forward_backward_code(ex, vars, params=[])
     # @show constraint_var, final_var
 
     constraint_code = [Assignment(final_var, last),
-                        Assignment(last, last ∩ constraint_var)]
+                        Assignment(last, last ⊓ constraint_var)]
 
     reverse_code = rev.(reverse(forward_code), Ref(params))
 
 
-    code = forward_code ∪ constraint_code ∪ reverse_code
+    code = [forward_code; constraint_code; reverse_code]
 
     return code, final_var, constraint_var
 end

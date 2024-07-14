@@ -166,7 +166,7 @@ function simple_reverse_pass(vars, forward_code)
 
     assigned = Set()  # which variables have already been assigned
 
-    reverse_code = reduce(vcat, simple_adj.(reverse(forward_code), Ref(assigned)))
+    reverse_code =  reduce(vcat, simple_adj.(reverse(forward_code), Ref(assigned)))
 
     final_vars = bar.(vars)
 
@@ -193,7 +193,7 @@ function gradient_code(ex, vars)
     unassigned = setdiff(gradient_vars, assigned)
     append!(initialization_code, [Assignment(var, 0) for var in unassigned])
 
-    code = forward_code ∪ initialization_code ∪ reverse_code
+    code = [forward_code; initialization_code; reverse_code]
 
     return code, final, gradient_vars
 end

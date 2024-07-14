@@ -9,17 +9,18 @@ using SymbolicUtils: Sym, Term
 using SymbolicUtils.Rewriters
 
 using Symbolics
-using Symbolics: value, 
-                istree, operation, arguments, 
+using Symbolics: value,
+                istree, operation, arguments,
                 Assignment
 
 using IntervalContractors
+using IntervalArithmetic, IntervalArithmetic.Symbols
 
-import Base: ∩
-import Base: ∪
+import IntervalArithmetic.Symbols: ⊓, ⊔
 
-@register_symbolic a ∩ b false
-@register_symbolic a ∪ b false
+
+@register_symbolic a ⊓ b false
+@register_symbolic a ⊔ b false
 
 using OrderedCollections
 
@@ -27,9 +28,9 @@ using ChainRulesCore, ChainRules
 
 
 
-# struct Assignment 
-#     lhs 
-#     rhs 
+# struct Assignment
+#     lhs
+#     rhs
 # end
 
 # Base.show(io::IO, eq::Assignment) = print(io, lhs(eq), " := ", rhs(eq))
