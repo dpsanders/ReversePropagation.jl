@@ -58,7 +58,7 @@ function cse(ex)
     return dict, final 
 end
 
-"Version of CSE returing a vector of equations"
+"Version of CSE returning a vector of equations"
 function cse_equations(ex) 
     dict, final = cse(ex) 
 
