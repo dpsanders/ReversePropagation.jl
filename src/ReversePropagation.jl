@@ -37,8 +37,7 @@ using ChainRulesCore, ChainRules
 
 include("make_variable.jl")
 include("chain_rules_interface.jl")
-# include("cse.jl")
-include("cse_new.jl")
+include("cse.jl")
 include("reverse_diff.jl")
 include("reverse_icp.jl")
 
