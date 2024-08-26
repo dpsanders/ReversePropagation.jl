@@ -1,5 +1,6 @@
 using IntervalContractors
 using IntervalArithmetic, IntervalArithmetic.Symbols
+using IntervalBoxes
 
 eq(a, b) = isequal_interval(bareinterval(a), bareinterval(b))
 eq(a::Tuple, b::Tuple) = all(eq.(a, b))
