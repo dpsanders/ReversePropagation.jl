@@ -34,7 +34,7 @@ end
     @test eq(C(IntervalBox(-10..10, -10..10), 0..1, 1..1), ( (-1..1, -1..1), 0..200 ))
 end
 
-@testset "bare intervals"
+@testset "bare intervals" begin
 
     ex = x^ExactReal(2) + y^ExactReal(2)
 
