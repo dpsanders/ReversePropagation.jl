@@ -24,9 +24,13 @@ end
 
 remove_parameters(s, params) = (any(x -> isequal(x, s), params)) ? variable(:_) : s
 
+
 function rev(eq::Assignment, params)
 
     vars = tuple(args(eq)...)
+
+    # vars = tuple(arguments(eq)...)
+    # vars = tuple(_map_to_num.(arguments(eq))...)
     return_vars = remove_constant.(tuple(lhs(eq), vars...))
     # return_vars = remove_constant.(tuple(lhs(eq), vars...))
 
@@ -58,7 +62,9 @@ const binary_functions = Dict(
                     );
 
 for (f, f_rev) in binary_functions
-    @eval rev(::typeof($f), z::Real, x::Real, y::Real) = $f_rev(z, x, y) 
+    # @eval rev(::typeof($f), z::Real, x::Real, y::Real) = $f_rev(z, x, y) 
+    @eval rev(::typeof($f), z, x, y) = $f_rev(z, x, y) 
+
     @eval @register_symbolic rev(a::typeof($f), z, x, y) false
 end
 
@@ -75,7 +81,8 @@ const unary_functions = [:sqrt, :abs,
 for f in unary_functions
     f_rev = Symbol(f, :_rev)
     @eval rev(::typeof($f), z::Real, x::Real) = $f_rev(z, x)
-    @eval @register_symbolic rev(a::typeof($f), z::Real, x::Real) false
+    # @eval @register_symbolic rev(a::typeof($f), z::Real, x::Real) false
+    @eval @register_symbolic rev(a::typeof($f), z, x) false
 end
 
 

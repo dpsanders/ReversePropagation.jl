@@ -3,7 +3,13 @@ lhs(eq::Assignment) = eq.lhs
 rhs(eq::Assignment) = value(eq.rhs)
 
 op(eq::Assignment) = operation(rhs(eq))
-args(eq::Assignment) = Num.(arguments(rhs(eq)))
+
+
+_map_to_num(x) = Num(x)
+_map_to_num(x::ExactReal) = x
+
+# args(eq::Assignment) = Num.(arguments(rhs(eq)))
+args(eq::Assignment) = _map_to_num.(arguments(rhs(eq)))
 
 name(var) = value(var).name
 bar(var) = variable(Symbol(var, '̄'))  # the character is the overbar symbol (on top of first `'`)
@@ -57,6 +63,7 @@ end
 
 function adj(eq::Assignment)
     vars = value.(args(eq))
+    # vars = value.(_map_to_num.(arguments(eq)))
 
     bar_lhs = bar(lhs(eq))
 

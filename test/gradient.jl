@@ -1,6 +1,6 @@
 
 @testset "gradient" begin
-    
+
     vars = @variables x, y
 
     @testset "Single variable" begin
