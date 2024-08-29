@@ -1,4 +1,3 @@
-using IntervalContractors
 using IntervalArithmetic, IntervalArithmetic.Symbols
 using IntervalBoxes
 
@@ -22,6 +21,9 @@ end
 
 @testset "forward_backward_contractor with parameter" begin
 
+    vars = @variables x, y
+    @variables a  # parameter
+
     ex = x + a
 
     C = forward_backward_contractor(ex, [x], [a])
@@ -36,6 +38,9 @@ end
 end
 
 @testset "bare intervals" begin
+
+    vars = @variables x, y
+    @variables a  # parameter
 
     ex = x^ExactReal(2) + y^ExactReal(2)
 
